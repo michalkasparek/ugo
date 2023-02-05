@@ -1,0 +1,21 @@
+{
+
+    "podnikatel": {
+        "jméno": "Ugo Fantozzi",
+        "ič": "123456789",
+        "sídlo": "Masarykova 1, 602 00 Brno",
+        "účet": "123456789/1234",
+        "banka": "označení banky",
+        "výchozí_měna": "Kč",
+        "důchod": "2049-01-31"
+    },
+
+    "skript": {
+        "cesta_evidence": "C:/Users/ugo/Documents/účetnictví/evidence",
+        "cesta_faktury": "C:/Users/ugo/Documents/účetnictví/faktury",
+        "font": "Consolas",
+        "cesta_font": "C:/WINDOWS/FONTS/CONSOLA.TTF",
+        "historie_spolupráce": "False"
+    }
+
+}
