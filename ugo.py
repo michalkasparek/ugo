@@ -45,6 +45,9 @@ if len(duplikaty) > 0:
 
 def hodinovka(hms, sazba):
 
+    if len(hms) <= 5:
+        hms = "00:" + hms 
+
     cas = str(hms).split(":")
     hodiny = int(cas[0])
     minuty = int(cas[1])
@@ -71,16 +74,25 @@ def progres(zacatek, vystaveni, duchod):
     rok_zacatku = zacatek.year
     rok_vystaveni = vystaveni.year
     rok_konce = duchod.year
+    roky = rok_vystaveni - rok_zacatku
 
     tmave = (rok_vystaveni - rok_zacatku) + 1
     tmave = "▓" * tmave
     svetle = rok_konce - rok_vystaveni
     svetle = "▒" * svetle
 
-    uplynulo_ratio = (vystaveni - zacatek).days / (duchod - zacatek).days
-    zbyva_ratio = (duchod - vystaveni).days / (duchod - zacatek).days   
+    mesicu = ((duchod - vystaveni).days)/30.416
 
-    bar = f"Děkuji za spolupráci. Až {int(zbyva_ratio * 100)} % jí může pořád být před námi!{os.linesep}{rok_zacatku} {tmave}{svetle} {rok_konce}"
+    if roky == 0:
+        kdy_jsme_zacali = "letos"
+    if roky == 1:
+        kdy_jsme_zacali = "loni"
+    if roky == 2:
+        kdy_jsme_zacali = "předloni"
+    if roky >= 3:
+        kdy_jsme_zacali = "před " + str(roky) + " lety" 
+
+    bar = f"Děkuji a těším se na další spolupráci.{os.linesep}Začali jsme s ní {kdy_jsme_zacali}, do důchodu mi zbývá {int(mesicu)} měsíců:{os.linesep}{rok_zacatku} {tmave}{svetle} {rok_konce}"
 
     return(bar)
 
