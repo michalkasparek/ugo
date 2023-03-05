@@ -43,7 +43,7 @@ if len(duplikaty) > 0:
     print(duplikaty[["číslo","vystavení","název","částka"]])
     print("***")
 
-def hodinovka(hms, sazba):
+def hodinovka(hms, sazba): # funkce přepočítávající údaj hh:mm:ss na float a v posledku na kačáky
 
     if len(hms) <= 5:
         hms = "00:" + hms 
@@ -65,7 +65,7 @@ def stats():
     mesice = faktury.groupby([pd.Grouper(key = 'vystavení', freq = 'M')])["částka"].sum()
     print(mesice)
 
-def progres(zacatek, vystaveni, duchod):
+def progres(zacatek, vystaveni, duchod): # ozdůbka do faktur
 
     zacatek = pd.to_datetime(zacatek)
     vystaveni = pd.to_datetime(vystaveni)
@@ -96,7 +96,7 @@ def progres(zacatek, vystaveni, duchod):
 
     return(bar)
 
-def tisk(cislo):
+def tisk(cislo): # klíčová fce, vyjde rozeslatelné faktury
 
     import fpdf
 
