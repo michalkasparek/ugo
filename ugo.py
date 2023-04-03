@@ -63,7 +63,7 @@ def hodinovka(hms, sazba): # funkce přepočítávající údaj hh:mm:ss na floa
 
 def stats():
     mesice = faktury.groupby([pd.Grouper(key = 'vystavení', freq = 'M')])["částka"].sum()
-    print(mesice)
+    print(f"""Poslední měsíc: {int(mesice[-1:].iloc[0])}\nSoučet za poslední 3 měsíce: {int(mesice[-3:].sum())}\nPrůměr za poslední 3 měsíce: {int(mesice[-3:].mean())}""")
 
 def progres(zacatek, vystaveni, duchod): # ozdůbka do faktur
 
@@ -95,6 +95,20 @@ def progres(zacatek, vystaveni, duchod): # ozdůbka do faktur
     bar = f"Děkuji a těším se na další spolupráci.{os.linesep}Začali jsme s ní {kdy_jsme_zacali}, do důchodu mi zbývá {int(mesicu)} měsíců:{os.linesep}{rok_zacatku} {tmave}{svetle} {rok_konce}"
 
     return(bar)
+
+def check():
+    vypisy = os.listdir(os.path.join(skript["cesta_evidence"], "vypisy"))
+    vypis = ''
+    for v in vypisy:
+        with open(os.path.join(os.path.join(skript["cesta_evidence"], "vypisy"), v), encoding="utf-8") as f:
+            vypis += f.read()
+
+    faktury["splatnost"]
+    posplatnosti = faktury[faktury["splatnost"] < pd.to_datetime(date.today())]
+
+    for index, row in posplatnosti.iterrows():
+        if str(row["číslo"]) not in vypis:
+            print(f"""{str(row["vystavení"])} -- {str(row["odběratel"])} -- {str(row["částka"])} -- {str(row["číslo"])}""")
 
 def tisk(cislo): # klíčová fce, vyjde rozeslatelné faktury
 
@@ -154,6 +168,9 @@ if sys.argv[1] == "-h":
 
 if sys.argv[1] == "-s":
     stats()
+
+if sys.argv[1] == "-k" or sys.argv[1] == "-c":
+    check()
 
 if sys.argv[1] == "-p":
 
