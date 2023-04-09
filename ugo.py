@@ -17,56 +17,70 @@ from datetime import date
 from datetime import timedelta
 import pandas as pd
 
-with open("konfigurace.json", 'r', encoding='utf-8') as k:
+with open("konfigurace.json", "r", encoding="utf-8") as k:
     konfigurace = json.loads(k.read())
 
 podnikatel = konfigurace["podnikatel"]
 skript = konfigurace["skript"]
 historie = bool(skript["historie_spolupráce"])
 
-faktury = pd.DataFrame(pd.read_csv(os.path.join(skript["cesta_evidence"], "faktury.csv"), sep=","))
-klienti = pd.DataFrame(pd.read_csv(os.path.join(skript["cesta_evidence"], "klienti.csv"), sep=","))
-faktury = faktury.merge(klienti, on = "odběratel", how="outer")
+faktury = pd.DataFrame(
+    pd.read_csv(os.path.join(skript["cesta_evidence"], "faktury.csv"), sep=",")
+)
+klienti = pd.DataFrame(
+    pd.read_csv(os.path.join(skript["cesta_evidence"], "klienti.csv"), sep=",")
+)
+faktury = faktury.merge(klienti, on="odběratel", how="outer")
 faktury["vystavení"] = pd.to_datetime(faktury["vystavení"])
 faktury["splatnost"] = pd.to_datetime(faktury["splatnost"])
 
 if historie == True:
-    zacatek_spoluprace = pd.DataFrame(pd.read_csv(os.path.join(skript["cesta_evidence"], "klienti_zacatek_spoluprace.csv"), sep=","))
+    zacatek_spoluprace = pd.DataFrame(
+        pd.read_csv(
+            os.path.join(skript["cesta_evidence"], "klienti_zacatek_spoluprace.csv"),
+            sep=",",
+        )
+    )
     zacatek_spoluprace["začátek"] = pd.to_datetime(zacatek_spoluprace["začátek"])
-    faktury = faktury.merge(zacatek_spoluprace, on = "odběratel", how="outer")
+    faktury = faktury.merge(zacatek_spoluprace, on="odběratel", how="outer")
     duchod = podnikatel["důchod"]
 
-duplikaty = faktury[faktury.duplicated(['číslo'], keep=False)]
+duplikaty = faktury[faktury.duplicated(["číslo"], keep=False)]
 
 if len(duplikaty) > 0:
     print("POZOR, jedno nebo více čísel faktur se v evidenci opakuje:")
-    print(duplikaty[["číslo","vystavení","název","částka"]])
+    print(duplikaty[["číslo", "vystavení", "název", "částka"]])
     print("***")
 
-def hodinovka(hms, sazba): # funkce přepočítávající údaj hh:mm:ss na float a v posledku na kačáky
 
+def hodinovka(
+    hms, sazba
+):  # funkce přepočítávající údaj hh:mm:ss na float a v posledku na kačáky
     if len(hms) <= 5:
-        hms = "00:" + hms 
+        hms = "00:" + hms
 
     cas = str(hms).split(":")
     hodiny = int(cas[0])
     minuty = int(cas[1])
     sekundy = int(cas[2])
-    cas = hodiny + minuty/60 + sekundy/3600
+    cas = hodiny + minuty / 60 + sekundy / 3600
 
     odmena = cas * int(sazba)
     odmena = str(odmena).split(".")[0]
 
     cas = round(cas, 3)
 
-    print(str(hms) + " = " + str(cas).replace(".",",") + " h = " + odmena + " korun")
+    print(str(hms) + " = " + str(cas).replace(".", ",") + " h = " + odmena + " korun")
+
 
 def stats():
-    mesice = faktury.groupby([pd.Grouper(key = 'vystavení', freq = 'M')])["částka"].sum()
-    print(f"""Poslední měsíc: {int(mesice[-1:].iloc[0])}\nSoučet za poslední 3 měsíce: {int(mesice[-3:].sum())}\nPrůměr za poslední 3 měsíce: {int(mesice[-3:].mean())}""")
+    mesice = faktury.groupby([pd.Grouper(key="vystavení", freq="M")])["částka"].sum()
+    print(
+        f"""Poslední měsíc: {int(mesice[-1:].iloc[0])}\nSoučet za poslední 3 měsíce: {int(mesice[-3:].sum())}\nPrůměr za poslední 3 měsíce: {int(mesice[-3:].mean())}"""
+    )
 
-def progres(zacatek, vystaveni, duchod): # ozdůbka do faktur
 
+def progres(zacatek, vystaveni, duchod):  # ozdůbka do faktur
     zacatek = pd.to_datetime(zacatek)
     vystaveni = pd.to_datetime(vystaveni)
     duchod = pd.to_datetime(duchod)
@@ -81,7 +95,7 @@ def progres(zacatek, vystaveni, duchod): # ozdůbka do faktur
     svetle = rok_konce - rok_vystaveni
     svetle = "▒" * svetle
 
-    mesicu = ((duchod - vystaveni).days)/30.416
+    mesicu = ((duchod - vystaveni).days) / 30.416
 
     if roky == 0:
         kdy_jsme_zacali = "letos"
@@ -90,17 +104,21 @@ def progres(zacatek, vystaveni, duchod): # ozdůbka do faktur
     if roky == 2:
         kdy_jsme_zacali = "předloni"
     if roky >= 3:
-        kdy_jsme_zacali = "před " + str(roky) + " lety" 
+        kdy_jsme_zacali = "před " + str(roky) + " lety"
 
     bar = f"Děkuji a těším se na další spolupráci.{os.linesep}Začali jsme s ní {kdy_jsme_zacali}, do důchodu mi zbývá {int(mesicu)} měsíců:{os.linesep}{rok_zacatku} {tmave}{svetle} {rok_konce}"
 
-    return(bar)
+    return bar
+
 
 def check():
     vypisy = os.listdir(os.path.join(skript["cesta_evidence"], "vypisy"))
-    vypis = ''
+    vypis = ""
     for v in vypisy:
-        with open(os.path.join(os.path.join(skript["cesta_evidence"], "vypisy"), v), encoding="utf-8") as f:
+        with open(
+            os.path.join(os.path.join(skript["cesta_evidence"], "vypisy"), v),
+            encoding="utf-8",
+        ) as f:
             vypis += f.read()
 
     faktury["splatnost"]
@@ -108,10 +126,12 @@ def check():
 
     for index, row in posplatnosti.iterrows():
         if str(row["číslo"]) not in vypis:
-            print(f"""{str(row["vystavení"])} -- {str(row["odběratel"])} -- {str(row["částka"])} -- {str(row["číslo"])}""")
+            print(
+                f"""{str(row["vystavení"])} -- {str(row["odběratel"])} -- {str(row["částka"])} -- {str(row["číslo"])}"""
+            )
 
-def tisk(cislo): # klíčová fce, vyjde rozeslatelné faktury
 
+def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     import fpdf
 
     faktura = faktury[faktury["číslo"] == cislo]
@@ -132,15 +152,17 @@ def tisk(cislo): # klíčová fce, vyjde rozeslatelné faktury
     popis = faktura["popis"].iloc[0]
     castka = faktura["částka"].iloc[0]
 
-    vystaveni = faktura["vystavení"].dt.strftime('%d. %m. %Y').iloc[0]
-    splatnost = faktura["splatnost"].dt.strftime('%d. %m. %Y').iloc[0]
+    vystaveni = faktura["vystavení"].dt.strftime("%d. %m. %Y").iloc[0]
+    splatnost = faktura["splatnost"].dt.strftime("%d. %m. %Y").iloc[0]
 
     cara = "=" * (len("Faktura č.") + 1 + len(str(cislo)))
 
     filename = str(cislo) + "_" + odberatel_kratce + ".pdf"
 
     if historie == True:
-        podekovani = progres(faktura["začátek"].iloc[0], faktura["vystavení"].iloc[0], duchod)
+        podekovani = progres(
+            faktura["začátek"].iloc[0], faktura["vystavení"].iloc[0], duchod
+        )
     else:
         podekovani = ""
 
@@ -149,19 +171,18 @@ def tisk(cislo): # klíčová fce, vyjde rozeslatelné faktury
     print(f"Export souboru {filename}…")
 
     try:
-
-        pdf = fpdf.FPDF(format='A4')
+        pdf = fpdf.FPDF(format="A4")
         pdf.set_margins(20, 20)
         pdf.add_page()
-        pdf.add_font(skript["font"],"",skript["cesta_font"],uni=True)
+        pdf.add_font(skript["font"], "", skript["cesta_font"], uni=True)
         pdf.set_font(skript["font"], size=12)
         pdf.multi_cell(200, 6, txt=text, align="L")
         pdf.output(os.path.join(skript["cesta_faktury"], filename))
 
     except Exception as e:
-
         print("Chyba:")
         print(e)
+
 
 if sys.argv[1] == "-h":
     hodinovka(sys.argv[2], sys.argv[3])
@@ -173,12 +194,11 @@ if sys.argv[1] == "-k" or sys.argv[1] == "-c":
     check()
 
 if sys.argv[1] == "-p":
-
     if len(sys.argv) == 3:
         tisk(int(sys.argv[2]))
-    
+
     else:
-        posledni = pd.to_datetime(date.today() - timedelta(days=7)) 
+        posledni = pd.to_datetime(date.today() - timedelta(days=7))
         posledni = faktury[faktury["vystavení"] > posledni]
         posledni = posledni["číslo"].to_list()
         for f in posledni:
