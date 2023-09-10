@@ -33,6 +33,8 @@ klienti = pd.DataFrame(
 faktury = faktury.merge(klienti, on="odběratel", how="outer")
 faktury["vystavení"] = pd.to_datetime(faktury["vystavení"])
 faktury["splatnost"] = pd.to_datetime(faktury["splatnost"])
+mesice = faktury.groupby([pd.Grouper(key="vystavení", freq="M")])["částka"].sum()
+
 
 if historie == True:
     zacatek_spoluprace = pd.DataFrame(
@@ -74,10 +76,23 @@ def hodinovka(
 
 
 def stats():
-    mesice = faktury.groupby([pd.Grouper(key="vystavení", freq="M")])["částka"].sum()
+    zacatek_roku = f"""{pd.to_datetime(date.today()).year}-01-01"""
+    print(
+        f"""YTD: {int(faktury[faktury['vystavení'] >= zacatek_roku]['částka'].sum())}"""
+    )
     print(
         f"""Poslední měsíc: {int(mesice[-1:].iloc[0])}\nSoučet za poslední 3 měsíce: {int(mesice[-3:].sum())}\nPrůměr za poslední 3 měsíce: {int(mesice[-3:].mean())}"""
     )
+
+
+def mesicni():
+    print(f"""{mesice[-12:]}""")
+
+
+def kvartaly():
+    qs = faktury.resample("Q", on="vystavení")["částka"].sum()
+    qs = qs[-4:]
+    print(qs)
 
 
 def progres(zacatek, vystaveni, duchod):  # ozdůbka do faktur
@@ -193,13 +208,24 @@ if sys.argv[1] == "-s":
 if sys.argv[1] == "-k" or sys.argv[1] == "-c":
     check()
 
+if sys.argv[1] == "-m":
+    mesicni()
+
+if sys.argv[1] == "-q":
+    kvartaly()
+
 if sys.argv[1] == "-p":
     if len(sys.argv) == 3:
         tisk(int(sys.argv[2]))
 
     else:
-        posledni = pd.to_datetime(date.today() - timedelta(days=7))
+        posledni = pd.to_datetime(date.today() - timedelta(days=10))
         posledni = faktury[faktury["vystavení"] > posledni]
         posledni = posledni["číslo"].to_list()
         for f in posledni:
             tisk(f)
+
+if sys.argv[1] == "-help":
+    print(
+        "Nápověda:\n-p: tisk\n-s: statistiky\n-k: kontrola výpisů\n-h: čas * hodinovka"
+    )
