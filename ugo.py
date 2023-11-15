@@ -148,7 +148,7 @@ def check():
 
 def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     import fpdf
-
+	
     faktura = faktury[faktury["číslo"] == cislo]
 
     dodavatel = podnikatel["jméno"]
@@ -165,6 +165,17 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     odberatel_sidlo = faktura["sídlo"].iloc[0]
 
     popis = faktura["popis"].iloc[0]
+    if len(popis) > 60:
+        if ":" in popis:
+            popis = popis.split(":")[0].strip() + ":\n" + popis.split(":")[1].strip()
+        else:
+            popis = popis.split(" ")
+            pocet_slov = len(popis)
+            pulka = int(pocet_slov / 2)
+            popis1 = " ".join(popis[:pulka])
+            popis2 = " ".join(popis[pulka:])
+            popis = popis1 + "\n" + popis2
+	
     castka = faktura["částka"].iloc[0]
 
     vystaveni = faktura["vystavení"].dt.strftime("%d. %m. %Y").iloc[0]
