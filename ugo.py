@@ -17,6 +17,9 @@ from datetime import date
 from datetime import timedelta
 import pandas as pd
 
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 with open("konfigurace.json", "r", encoding="utf-8") as k:
     konfigurace = json.loads(k.read())
 
@@ -77,8 +80,12 @@ def hodinovka(
 
 def stats():
     zacatek_roku = f"""{pd.to_datetime(date.today()).year}-01-01"""
+    loni = date.today().year - 1
     print(
-        f"""YTD: {int(faktury[faktury['vystavení'] >= zacatek_roku]['částka'].sum())}"""
+        f"""{loni}: {int(faktury[faktury['vystavení'].dt.year == loni]['částka'].sum())}"""
+    )
+    print(
+        f"""{date.today().year}: {int(faktury[faktury['vystavení'] >= zacatek_roku]['částka'].sum())}"""
     )
     print(
         f"""Poslední měsíc: {int(mesice[-1:].iloc[0])}\nSoučet za poslední 3 měsíce: {int(mesice[-3:].sum())}\nPrůměr za poslední 3 měsíce: {int(mesice[-3:].mean())}"""
@@ -128,6 +135,12 @@ def progres(zacatek, vystaveni, duchod):  # ozdůbka do faktur
 
 def check():
     vypisy = os.listdir(os.path.join(skript["cesta_evidence"], "vypisy"))
+    try:
+        with open(os.path.join(skript["cesta_evidence"], "zaplaceno.json"), 'r') as zaplaceno_f:
+            zaplaceno = json.load(zaplaceno_f)
+            zaplaceno = [int(x) for x in zaplaceno]
+    except:
+        zaplaceno = []
     vypis = ""
     for v in vypisy:
         with open(
@@ -137,7 +150,7 @@ def check():
             vypis += f.read()
 
     faktury["splatnost"]
-    posplatnosti = faktury[faktury["splatnost"] < pd.to_datetime(date.today())]
+    posplatnosti = faktury[(faktury["splatnost"] < pd.to_datetime(date.today())) & (~faktury['číslo'].isin(zaplaceno))]
 
     for index, row in posplatnosti.iterrows():
         if str(row["číslo"]) not in vypis:
