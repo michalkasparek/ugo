@@ -136,7 +136,9 @@ def progres(zacatek, vystaveni, duchod):  # ozdůbka do faktur
 def check():
     vypisy = os.listdir(os.path.join(skript["cesta_evidence"], "vypisy"))
     try:
-        with open(os.path.join(skript["cesta_evidence"], "zaplaceno.json"), 'r') as zaplaceno_f:
+        with open(
+            os.path.join(skript["cesta_evidence"], "zaplaceno.json"), "r"
+        ) as zaplaceno_f:
             zaplaceno = json.load(zaplaceno_f)
             zaplaceno = [int(x) for x in zaplaceno]
     except:
@@ -150,7 +152,10 @@ def check():
             vypis += f.read()
 
     faktury["splatnost"]
-    posplatnosti = faktury[(faktury["splatnost"] < pd.to_datetime(date.today())) & (~faktury['číslo'].isin(zaplaceno))]
+    posplatnosti = faktury[
+        (faktury["splatnost"] < pd.to_datetime(date.today()))
+        & (~faktury["číslo"].isin(zaplaceno))
+    ]
 
     for index, row in posplatnosti.iterrows():
         if str(row["číslo"]) not in vypis:
@@ -161,7 +166,7 @@ def check():
 
 def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     import fpdf
-	
+
     faktura = faktury[faktury["číslo"] == cislo]
 
     dodavatel = podnikatel["jméno"]
@@ -181,6 +186,8 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     if len(popis) > 60:
         if ":" in popis:
             popis = popis.split(":")[0].strip() + ":\n" + popis.split(":")[1].strip()
+        elif "///" in popis:
+             popis = popis.split("///")[0].strip() + "\n" + popis.split("///")[1].strip()
         else:
             popis = popis.split(" ")
             pocet_slov = len(popis)
@@ -188,7 +195,7 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
             popis1 = " ".join(popis[:pulka])
             popis2 = " ".join(popis[pulka:])
             popis = popis1 + "\n" + popis2
-	
+
     castka = faktura["částka"].iloc[0]
 
     vystaveni = faktura["vystavení"].dt.strftime("%d. %m. %Y").iloc[0]
@@ -221,7 +228,6 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     except Exception as e:
         print("Chyba:")
         print(e)
-
 
 if sys.argv[1] == "-h":
     hodinovka(sys.argv[2], sys.argv[3])
