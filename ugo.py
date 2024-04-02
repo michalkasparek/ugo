@@ -36,7 +36,7 @@ klienti = pd.DataFrame(
 faktury = faktury.merge(klienti, on="odběratel", how="outer")
 faktury["vystavení"] = pd.to_datetime(faktury["vystavení"])
 faktury["splatnost"] = pd.to_datetime(faktury["splatnost"])
-mesice = faktury.groupby([pd.Grouper(key="vystavení", freq="M")])["částka"].sum()
+mesice = faktury.groupby([pd.Grouper(key="vystavení", freq="ME")])["částka"].sum()
 
 
 if historie == True:
@@ -177,17 +177,21 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     mena = podnikatel["výchozí_měna"]
 
     odberatel = faktura["název"].iloc[0]
+    if "///" in odberatel:
+        odberatel = odberatel.split("///")[0].strip() + "\n" + odberatel.split("///")[1].strip()
+
     odberatel_kratce = faktura["odběratel"].iloc[0]
     odberatel_ic = faktura["ič"].iloc[0]
     odberatel_dic = faktura["dič"].iloc[0]
     odberatel_sidlo = faktura["sídlo"].iloc[0]
 
     popis = faktura["popis"].iloc[0]
-    if len(popis) > 60:
+
+    if "///" in popis:
+             popis = popis.split("///")[0].strip() + "\n" + popis.split("///")[1].strip()
+    elif len(popis) > 60:
         if ":" in popis:
             popis = popis.split(":")[0].strip() + ":\n" + popis.split(":")[1].strip()
-        elif "///" in popis:
-             popis = popis.split("///")[0].strip() + "\n" + popis.split("///")[1].strip()
         else:
             popis = popis.split(" ")
             pocet_slov = len(popis)
@@ -205,14 +209,14 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
 
     filename = str(cislo) + "_" + odberatel_kratce + ".pdf"
 
-    if historie == True:
+    if (historie == True) & (odberatel_kratce in zacatek_spoluprace["odběratel"].to_list()):
         podekovani = progres(
             faktura["začátek"].iloc[0], faktura["vystavení"].iloc[0], duchod
         )
     else:
         podekovani = ""
 
-    text = f"""FAKTURA Č. {cislo}{os.linesep}{cara}{os.linesep}{os.linesep}Datum vystavení: {vystaveni}{os.linesep}{os.linesep}Dodavatel:{os.linesep}{dodavatel}{os.linesep}{dodavatel_sidlo}{os.linesep}IČ: {dodavatel_ic}{os.linesep}(Není plátce DPH.){os.linesep}{os.linesep}Odběratel:{os.linesep}{odberatel}{os.linesep}{odberatel_sidlo}{os.linesep}IČ: {odberatel_ic}{os.linesep}DIČ: {odberatel_dic}{os.linesep}{os.linesep}Dodané služby:{os.linesep}{popis} ----> {castka} {mena}{os.linesep}{os.linesep}> Celkem k úhradě: {castka} {mena}{os.linesep}> Číslo účtu: {dodavatel_ucet} ({dodavatel_banka}){os.linesep}> Variabilní symbol: {cislo}{os.linesep}> Datum splatnosti: {splatnost}{os.linesep}{os.linesep}{podekovani}"""
+    text = f"""FAKTURA Č. {cislo}{os.linesep}{cara}{os.linesep}{os.linesep}Datum vystavení: {vystaveni}{os.linesep}{os.linesep}Dodavatel:{os.linesep}{dodavatel}{os.linesep}{dodavatel_sidlo}{os.linesep}IČ: {dodavatel_ic}{os.linesep}(Není plátce DPH.){os.linesep}{os.linesep}Odběratel:{os.linesep}{odberatel}{os.linesep}{odberatel_sidlo}{os.linesep}IČ: {odberatel_ic}{os.linesep}DIČ: {odberatel_dic}{os.linesep}{os.linesep}Dodané služby:{os.linesep}{popis} ---> {castka} {mena}{os.linesep}{os.linesep}> Celkem k úhradě: {castka} {mena}{os.linesep}> Číslo účtu: {dodavatel_ucet} ({dodavatel_banka}){os.linesep}> Variabilní symbol: {cislo}{os.linesep}> Datum splatnosti: {splatnost}{os.linesep}{os.linesep}{podekovani}"""
 
     print(f"Export souboru {filename}…")
 
@@ -249,7 +253,7 @@ if sys.argv[1] == "-p":
         tisk(int(sys.argv[2]))
 
     else:
-        posledni = pd.to_datetime(date.today() - timedelta(days=10))
+        posledni = pd.to_datetime(date.today() - timedelta(days=7))
         posledni = faktury[faktury["vystavení"] > posledni]
         posledni = posledni["číslo"].to_list()
         for f in posledni:
