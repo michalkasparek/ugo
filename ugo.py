@@ -97,7 +97,7 @@ def mesicni():
 
 
 def kvartaly():
-    qs = faktury.resample("Q", on="vystavení")["částka"].sum()
+    qs = faktury.resample("QE", on="vystavení")["částka"].sum().astype(int)
     qs = qs[-4:]
     print(qs)
 
@@ -157,7 +157,7 @@ def check():
         & (~faktury["číslo"].isin(zaplaceno))
     ]
 
-    for index, row in posplatnosti.iterrows():
+    for index, row in posplatnosti.sort_values(by="vystavení").iterrows():
         if str(row["číslo"]) not in vypis:
             print(
                 f"""{str(row["vystavení"])} -- {str(row["odběratel"])} -- {str(row["částka"])} -- {str(row["číslo"])}"""
@@ -178,7 +178,7 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
 
     odberatel = faktura["název"].iloc[0]
     if "///" in odberatel:
-        odberatel = odberatel.split("///")[0].strip() + "\n" + odberatel.split("///")[1].strip()
+        odberatel = "\n".join([odb.strip() for odb in odberatel.split("///")])
 
     odberatel_kratce = faktura["odběratel"].iloc[0]
     odberatel_ic = faktura["ič"].iloc[0]
@@ -188,7 +188,7 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     popis = faktura["popis"].iloc[0]
 
     if "///" in popis:
-             popis = popis.split("///")[0].strip() + "\n" + popis.split("///")[1].strip()
+             popis = "\n".join([pop.strip() for pop in popis.split("///")])
     elif len(popis) > 60:
         if ":" in popis:
             popis = popis.split(":")[0].strip() + ":\n" + popis.split(":")[1].strip()
