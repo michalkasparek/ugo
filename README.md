@@ -23,14 +23,17 @@ Jde o osobní projekt bez velkých ambicí, motivovaný poměrem ceny a kvality 
 - Příkaz ```ugo.py -h hh:mm:ss sazba``` vynásobí čas naměřený v Togglu (nebo jinde) hodinovkou a vypíše výslednou částku.
 - Příkazy ```ugo.py -c``` a ```ugo.py -k``` načtou všechny bankovní výpisy v podsložce ```vypisy``` v účetnictví, zkontrolují chybějící variabilní symboly a vypíšou (zřejmě) neuhrazené faktury po splatnosti. (Výpisy musejí být v textovém formátu, např. csv, html či txt.)
 
+## Novinky
+
+- 2025-07-31 QR kódy, díky prima knihovně [python-qrplatba](https://github.com/ViktorStiskala/python-qrplatba).
+
 ## To-do
 
-- víc položek na jednu fakturu
-- víc statistik: roky, year-to-date, velikost klientů
-- podpora více měn
-    - pohlídat ve statistikách
-- víc vstupních tabulek: 2022.csv, 2023.csv atd.
-- cross-platform kompatibilita (zatím testováno jen na Windows)
+- přejít z Pandas na Polars (méně dependencies)
+- cross-platform kompatibilita (zatím testováno jen na Windows, na Ubuntu se tomu pořád nechce)
     - cesta k souborům
     - font
-- src/ a další náležitosti normální package
+- víc položek na jednu fakturu
+- víc statistik: roky, year-to-date, velikost klientů
+- víc vstupních tabulek: 2022.csv, 2023.csv atd.
+- src/ a další náležitosti normální package (uv-friendly)

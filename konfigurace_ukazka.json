@@ -15,7 +15,8 @@
         "cesta_faktury": "C:/Users/ugo/Documents/účetnictví/faktury",
         "font": "Consolas",
         "cesta_font": "C:/WINDOWS/FONTS/CONSOLA.TTF",
-        "historie_spolupráce": "False"
+        "historie_spolupráce": "False",
+        "QR": "False"
     }
 
 }

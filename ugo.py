@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Skript pro vystavování faktur
 
@@ -13,10 +11,12 @@ __status__ = "Development"
 import sys
 import os
 import json
+import warnings
 from datetime import date
 from datetime import timedelta
 import pandas as pd
 
+warnings.filterwarnings('ignore')
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -82,10 +82,10 @@ def stats():
     zacatek_roku = f"""{pd.to_datetime(date.today()).year}-01-01"""
     loni = date.today().year - 1
     print(
-        f"""{loni}: {int(faktury[faktury['vystavení'].dt.year == loni]['částka'].sum())}"""
+        f"""{loni}: {int(faktury[faktury["vystavení"].dt.year == loni]["částka"].sum())}"""
     )
     print(
-        f"""{date.today().year}: {int(faktury[faktury['vystavení'] >= zacatek_roku]['částka'].sum())}"""
+        f"""{date.today().year}: {int(faktury[faktury["vystavení"] >= zacatek_roku]["částka"].sum())}"""
     )
     print(
         f"""Poslední měsíc: {int(mesice[-1:].iloc[0])}\nSoučet za poslední 3 měsíce: {int(mesice[-3:].sum())}\nPrůměr za poslední 3 měsíce: {int(mesice[-3:].mean())}"""
@@ -188,7 +188,7 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     popis = faktura["popis"].iloc[0]
 
     if "///" in popis:
-             popis = "\n".join([pop.strip() for pop in popis.split("///")])
+        popis = "\n".join([pop.strip() for pop in popis.split("///")])
     elif len(popis) > 60:
         if ":" in popis:
             popis = popis.split(":")[0].strip() + ":\n" + popis.split(":")[1].strip()
@@ -209,16 +209,35 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
 
     filename = str(cislo) + "_" + odberatel_kratce + ".pdf"
 
-    if (historie == True) & (odberatel_kratce in zacatek_spoluprace["odběratel"].to_list()):
+    if (historie == True) & (
+        odberatel_kratce in zacatek_spoluprace["odběratel"].to_list()
+    ):
         podekovani = progres(
             faktura["začátek"].iloc[0], faktura["vystavení"].iloc[0], duchod
         )
     else:
         podekovani = ""
 
-    text = f"""FAKTURA Č. {cislo}{os.linesep}{cara}{os.linesep}{os.linesep}Datum vystavení: {vystaveni}{os.linesep}{os.linesep}Dodavatel:{os.linesep}{dodavatel}{os.linesep}{dodavatel_sidlo}{os.linesep}IČ: {dodavatel_ic}{os.linesep}(Není plátce DPH.){os.linesep}{os.linesep}Odběratel:{os.linesep}{odberatel}{os.linesep}{odberatel_sidlo}{os.linesep}IČ: {odberatel_ic}{os.linesep}DIČ: {odberatel_dic}{os.linesep}{os.linesep}Dodané služby:{os.linesep}{popis} ---> {castka} {mena}{os.linesep}{os.linesep}> Celkem k úhradě: {castka} {mena}{os.linesep}> Číslo účtu: {dodavatel_ucet} ({dodavatel_banka}){os.linesep}> Variabilní symbol: {cislo}{os.linesep}> Datum splatnosti: {splatnost}{os.linesep}{os.linesep}{podekovani}"""
+    text = f"""FAKTURA Č. {cislo}{os.linesep}{cara}{2*os.linesep}█ Datum vystavení:{os.linesep}{vystaveni}{2*os.linesep}█ Dodavatel:{os.linesep}{dodavatel}{os.linesep}{dodavatel_sidlo}{os.linesep}IČ: {dodavatel_ic}{os.linesep}(Není plátce DPH.){2*os.linesep}█ Odběratel:{os.linesep}{odberatel}{os.linesep}{odberatel_sidlo}{os.linesep}IČ: {odberatel_ic}{os.linesep}DIČ: {odberatel_dic}{2*os.linesep}█ Dodané služby:{os.linesep}{popis} ---> {castka} {mena}{os.linesep}{os.linesep}█ Celkem k úhradě: {castka} {mena}{os.linesep}█ Číslo účtu: {dodavatel_ucet} ({dodavatel_banka}){os.linesep}█ Variabilní symbol: {cislo}{os.linesep}█ Datum splatnosti: {splatnost}{2*os.linesep}{podekovani}"""
 
     print(f"Export souboru {filename}…")
+
+    if bool(skript["QR"]) == True:
+        from qrplatba import QRPlatbaGenerator
+
+        generator = QRPlatbaGenerator(dodavatel_ucet, castka, x_vs=cislo)
+
+        svg_content = generator.make_image().to_string(encoding="unicode")
+
+        svg_content = svg_content.split("<text ")[0] + svg_content.split("</text>")[-1]
+        svg_content = (
+            svg_content.split("<path")[0] + "<path" + svg_content.split("<path")[-1]
+        )
+
+        with open(
+            os.path.join(skript["cesta_faktury"], "qr.svg"), "w+", encoding="utf-8"
+        ) as svg_file:
+            svg_file.write(svg_content)
 
     try:
         pdf = fpdf.FPDF(format="A4")
@@ -226,12 +245,29 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
         pdf.add_page()
         pdf.add_font(skript["font"], "", skript["cesta_font"], uni=True)
         pdf.set_font(skript["font"], size=12)
+        if skript["QR"] == "True":
+            pdf.image(
+                os.path.join(skript["cesta_faktury"], "qr.svg"),
+                x=14.7,
+                y=20,
+                w=53.6,
+                h=53.6,
+            )
+            pdf.multi_cell(
+                100,
+                6,
+                txt= 8 *os.linesep,
+                align="L",
+                border="1",
+            )
+            os.remove(os.path.join(skript["cesta_faktury"], "qr.svg"))
         pdf.multi_cell(200, 6, txt=text, align="L")
         pdf.output(os.path.join(skript["cesta_faktury"], filename))
 
     except Exception as e:
         print("Chyba:")
         print(e)
+
 
 if sys.argv[1] == "-h":
     hodinovka(sys.argv[2], sys.argv[3])
