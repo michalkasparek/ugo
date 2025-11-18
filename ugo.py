@@ -1,11 +1,5 @@
 """
 Skript pro vystavování faktur
-
-__version__ = "zárodek prototypu, uwaga uwaga"
-__author__ = "Michal Kašpárek"
-__email__ = "michal.kasparek@gmail.com"
-__license__ = "MIT"
-__status__ = "Development"
 """
 
 import sys
@@ -128,7 +122,19 @@ def progres(zacatek, vystaveni, duchod):  # ozdůbka do faktur
     if roky >= 3:
         kdy_jsme_zacali = "před " + str(roky) + " lety"
 
-    bar = f"Děkuji a těším se na další spolupráci.{os.linesep}Začali jsme s ní {kdy_jsme_zacali}, do důchodu mi zbývá {int(mesicu)} měsíců:{os.linesep}{rok_zacatku} {tmave}{svetle} {rok_konce}"
+    mesice = int(mesicu % 12)
+    if mesice == 0:
+        zbyv_mesicu = ""
+    if mesice == 1:
+        zbyv_mesicu = f" a {mesice} měsíc"
+    elif mesice in [2, 3, 4]:
+        zbyv_mesicu = f" a {mesice} měsíce"
+    elif mesice >= 5:
+        zbyv_mesicu = f" a {mesice} měsíců"
+
+    zbyva = str(int(mesicu // 12)) + " let" + zbyv_mesicu
+
+    bar = f"Děkuji a těším se na další spolupráci.{os.linesep}Začali jsme s ní {kdy_jsme_zacali}, do důchodu mi zbývá {zbyva}:{os.linesep}{rok_zacatku} {tmave}{svetle} {rok_konce}"
 
     return bar
 
@@ -218,7 +224,7 @@ def tisk(cislo):  # klíčová fce, vyjde rozeslatelné faktury
     else:
         podekovani = ""
 
-    text = f"""FAKTURA Č. {cislo}{os.linesep}{cara}{2*os.linesep}█ Datum vystavení:{os.linesep}{vystaveni}{2*os.linesep}█ Dodavatel:{os.linesep}{dodavatel}{os.linesep}{dodavatel_sidlo}{os.linesep}IČ: {dodavatel_ic}{os.linesep}(Není plátce DPH.){2*os.linesep}█ Odběratel:{os.linesep}{odberatel}{os.linesep}{odberatel_sidlo}{os.linesep}IČ: {odberatel_ic}{os.linesep}DIČ: {odberatel_dic}{2*os.linesep}█ Dodané služby:{os.linesep}{popis} ---> {castka} {mena}{os.linesep}{os.linesep}█ Celkem k úhradě: {castka} {mena}{os.linesep}█ Číslo účtu: {dodavatel_ucet} ({dodavatel_banka}){os.linesep}█ Variabilní symbol: {cislo}{os.linesep}█ Datum splatnosti: {splatnost}{2*os.linesep}{podekovani}"""
+    text = f"""FAKTURA Č. {cislo}{os.linesep}{cara}{2*os.linesep}DATUM VYSTAVENÍ{os.linesep}{vystaveni}{2*os.linesep}DODAVATEL{os.linesep}{dodavatel}{os.linesep}{dodavatel_sidlo}{os.linesep}IČ: {dodavatel_ic}{os.linesep}(Není plátce DPH.){2*os.linesep}ODBĚRATEL{os.linesep}{odberatel}{os.linesep}{odberatel_sidlo}{os.linesep}IČ: {odberatel_ic}{os.linesep}DIČ: {odberatel_dic}{2*os.linesep}DODANÉ SLUŽBY{os.linesep}{popis} ---> {castka} {mena}{os.linesep}{os.linesep}█ Celkem k úhradě: {castka} {mena}{os.linesep}█ Číslo účtu: {dodavatel_ucet} ({dodavatel_banka}){os.linesep}█ Variabilní symbol: {cislo}{os.linesep}█ Datum splatnosti: {splatnost}{2*os.linesep}{podekovani}"""
 
     print(f"Export souboru {filename}…")
 
